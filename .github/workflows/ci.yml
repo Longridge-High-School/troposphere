@@ -5,6 +5,7 @@ on:
 
 jobs:
   test:
+    name: 🧪 Test
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout Repo
@@ -24,6 +25,6 @@ jobs:
       - name: 🏗️ Build Prisma Client
         run: npx prisma generate
       - name: 💽 Migrate Database
-        run: npx prisma generate
+        run: npm run create-test-db
       - name: 🧪 Run Vitest
         run: npm run test:coverage
