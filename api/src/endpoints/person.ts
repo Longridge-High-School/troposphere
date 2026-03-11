@@ -1,8 +1,13 @@
 import express from 'express'
 
 import {getPrisma} from '../lib/prisma'
+import {
+  createPersonWithMatch,
+  getPersonFromMatch,
+  type PersonCreateData
+} from '../lib/person'
 
-const router = express.Router()
+export const router = express.Router()
 
 router.get('/:person', async (req, res) => {
   const prisma = getPrisma()
@@ -24,20 +29,67 @@ router.get('/:person', async (req, res) => {
 
 interface SyncResponseBody {
   /* The Match Type will either be "internal" for the internal id, or the key in the PersonServiceIds table */
-  matchType: string
-  matchId: string
+  platformId: string
+  person: PersonCreateData
 }
 
 router.post('/sync', async (req, res) => {
   const prisma = getPrisma()
 
-  const body = JSON.parse(req.body) as SyncResponseBody
+  const body = req.body as SyncResponseBody
 
-  let personId = undefined
+  const matchedPerson = await getPersonFromMatch(
+    res.locals.platform,
+    body.platformId
+  )
 
-  if (body.matchType !== 'internal') {
-    const serviceId = await prisma.personServiceIds.findFirst({
-      where: {serviceKey: body.matchType, serviceId: body.matchId}
+  if (matchedPerson === null) {
+    // No match was found for this person in the database, create an entry for them.
+    const newPerson = await createPersonWithMatch(
+      res.locals.platform,
+      body.platformId,
+      res.locals.platform,
+      body.person
+    )
+
+    res.status(201)
+    res.json({result: 'created', person: newPerson})
+    return
+  }
+
+  if (matchedPerson.source !== res.locals.platform) {
+    res.status(403)
+    res.json({
+      result: 'error',
+      message: `This person belongs to the source ${matchedPerson.source}`
     })
   }
+
+  const shouldUpdate = (
+    Object.keys(body.person) as Array<keyof PersonCreateData>
+  ).reduce((should, property) => {
+    if (should) {
+      return true
+    }
+
+    if (body.person[property] !== matchedPerson[property]) {
+      return true
+    }
+
+    return false
+  }, false as boolean)
+
+  if (shouldUpdate) {
+    const updatedPerson = await prisma.person.update({
+      where: {id: matchedPerson.id},
+      data: {...body.person}
+    })
+
+    res.status(201)
+    res.json({result: 'updated', person: updatedPerson})
+    return
+  }
+
+  res.status(200)
+  res.json({result: 'no-change', person: matchedPerson})
 })

@@ -4,22 +4,35 @@
   "description": "",
   "main": "prettier.config.js",
   "scripts": {
+    "dev:api": "dotenv -e .env tsx ./api/src/api-bin.ts",
+    "dev:create-api-key": "dotenv -e .env tsx ./api/src/create-new-cli-api-key.ts",
+    "create-test-db": "dotenv -e .env.test -- prisma migrate dev",
     "test": "dotenv -e .env.test -- vitest"
   },
   "author": "",
   "license": "MIT",
   "devDependencies": {
+    "@faker-js/faker": "^10.3.0",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/deep-equal": "^1.0.4",
     "@types/express": "^5.0.6",
     "@types/node": "^25.4.0",
+    "@types/supertest": "^7.2.0",
     "dotenv": "^17.3.1",
     "dotenv-cli": "^11.0.0",
     "prettier": "^3.8.1",
     "prisma": "^7.4.2",
+    "supertest": "^7.2.2",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"
   },
   "dependencies": {
     "@prisma/adapter-better-sqlite3": "^7.4.2",
-    "express": "^5.2.1"
+    "@prisma/client": "^7.4.2",
+    "body-parser": "^2.2.2",
+    "deep-equal": "^2.2.3",
+    "express": "^5.2.1",
+    "uuid": "^13.0.0"
   }
 }

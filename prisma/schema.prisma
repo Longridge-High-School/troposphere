@@ -17,13 +17,16 @@ model Person {
   cohort    String
   type      String
 
-  accountName String @unique
-  email       String @unique
+  accountName String
+  email       String
 
   source String
 
   memberships GroupMembership[]
   serviceIds  PersonServiceIds[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model PersonServiceIds {
@@ -34,6 +37,9 @@ model PersonServiceIds {
 
   person   Person @relation(fields: [personId], references: [id])
   personId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Group {
@@ -44,6 +50,9 @@ model Group {
   source String
 
   memberships GroupMembership[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model GroupMembership {
@@ -53,4 +62,17 @@ model GroupMembership {
   groupId  String
   person   Person @relation(fields: [personId], references: [id])
   personId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model APIKey {
+  id String @id @default(uuid())
+
+  key String @unique
+  platform String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
