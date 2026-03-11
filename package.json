@@ -7,7 +7,8 @@
     "dev:api": "dotenv -e .env tsx ./api/src/api-bin.ts",
     "dev:create-api-key": "dotenv -e .env tsx ./api/src/create-new-cli-api-key.ts",
     "create-test-db": "dotenv -e .env.test -- prisma migrate dev",
-    "test": "dotenv -e .env.test -- vitest"
+    "test": "dotenv -e .env.test -- vitest",
+    "test:coverage": "dotenv -e .env.test -- vitest --coverage"
   },
   "author": "",
   "license": "MIT",
@@ -18,6 +19,7 @@
     "@types/express": "^5.0.6",
     "@types/node": "^25.4.0",
     "@types/supertest": "^7.2.0",
+    "@vitest/coverage-v8": "^4.0.18",
     "dotenv": "^17.3.1",
     "dotenv-cli": "^11.0.0",
     "prettier": "^3.8.1",
