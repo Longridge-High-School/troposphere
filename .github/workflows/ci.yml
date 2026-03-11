@@ -19,6 +19,8 @@ jobs:
         with:
           path: node_modules
           key: node-modules-${{ hashFiles('package-lock.json') }}
+      - name: 📥 npm install
+        run: npm install
       - name: 🏗️ Build Prisma Client
         run: npx prisma generate
       - name: 💽 Migrate Database
