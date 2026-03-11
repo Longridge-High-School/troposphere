@@ -3,6 +3,7 @@ import bodyParser from 'body-parser'
 
 import {authenticateRequests} from './middleware/authenticate'
 
+import {router as groupRouter} from './endpoints/group'
 import {router as personRouter} from './endpoints/person'
 
 export const app = express()
@@ -10,6 +11,7 @@ export const app = express()
 app.use(bodyParser.json())
 
 app.use(authenticateRequests)
+app.use('/group', groupRouter)
 app.use('/person', personRouter)
 
 app.get('/me', (req, res) => {
