@@ -96,3 +96,42 @@ router.post('/sync', async (req, res) => {
   res.status(200)
   res.json({result: 'no-change', person: matchedPerson})
 })
+
+router.get('/sync/:source', async (req, res) => {
+  const prisma = getPrisma()
+
+  if (res.locals.platform !== req.params.source) {
+    res.status(403)
+    res.json({result: 'error'})
+    return
+  }
+
+  const people = await prisma.person.findMany({
+    where: {source: req.params.source},
+    include: {serviceIds: {where: {serviceKey: req.params.source}}}
+  })
+
+  res.json({
+    result: 'success',
+    people: people.map(person => {
+      return {personId: person.id, sourceId: person.serviceIds[0].serviceId}
+    })
+  })
+})
+
+router.post('/sync/:source', async (req, res) => {
+  const prisma = getPrisma()
+
+  if (res.locals.platform !== req.params.source) {
+    res.status(403)
+    res.json({result: 'error'})
+    return
+  }
+
+  const deletedCount = await prisma.person.deleteMany({
+    where: {id: {notIn: req.body.people}, source: req.params.source}
+  })
+
+  res.status(200)
+  res.json({result: 'success', deleted: deletedCount.count})
+})

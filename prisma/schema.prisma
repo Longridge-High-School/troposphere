@@ -35,7 +35,7 @@ model PersonServiceIds {
   serviceKey String
   serviceId  String
 
-  person   Person @relation(fields: [personId], references: [id])
+  person   Person @relation(fields: [personId], references: [id], onDelete: Cascade)
   personId String
 
   createdAt DateTime @default(now())
@@ -60,7 +60,7 @@ model GroupMembership {
 
   group    Group  @relation(fields: [groupId], references: [id])
   groupId  String
-  person   Person @relation(fields: [personId], references: [id])
+  person   Person @relation(fields: [personId], references: [id], onDelete: Cascade)
   personId String
 
   createdAt DateTime @default(now())

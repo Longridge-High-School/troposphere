@@ -101,5 +101,36 @@ describe('API', () => {
 
       expect(notFoundResponse.status).toBe(404)
     })
+
+    test('It should allow a service to find all its users and clear them', async () => {
+      const findUsersResponse = await request(app)
+        .get(`/person/sync/test`)
+        .set('Auth', apiKey)
+
+      expect(findUsersResponse.body.people).toHaveLength(1)
+
+      const badFindUsersResponse = await request(app)
+        .get(`/person/sync/bad`)
+        .set('Auth', apiKey)
+
+      expect(badFindUsersResponse.status).toBe(403)
+      expect(badFindUsersResponse.body.result).toBe('error')
+
+      const clearUsersResponse = await request(app)
+        .post(`/person/sync/test`)
+        .set('Auth', apiKey)
+        .send({people: [internalUserId]})
+
+      expect(clearUsersResponse.status).toBe(200)
+      expect(clearUsersResponse.body.deleted).toBe(0)
+
+      const realClearUsersResponse = await request(app)
+        .post(`/person/sync/test`)
+        .set('Auth', apiKey)
+        .send({people: []})
+
+      expect(realClearUsersResponse.status).toBe(200)
+      expect(realClearUsersResponse.body.deleted).toBe(1)
+    })
   })
 })
