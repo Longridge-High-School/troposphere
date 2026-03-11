@@ -29,6 +29,7 @@ router.get('/:person', async (req, res) => {
 
 interface SyncResponseBody {
   /* The Match Type will either be "internal" for the internal id, or the key in the PersonServiceIds table */
+  platform?: string
   platformId: string
   person: PersonCreateData
 }
@@ -38,15 +39,17 @@ router.post('/sync', async (req, res) => {
 
   const body = req.body as SyncResponseBody
 
+  const targetPlatform = body.platform ? body.platform : res.locals.platform
+
   const matchedPerson = await getPersonFromMatch(
-    res.locals.platform,
+    targetPlatform,
     body.platformId
   )
 
   if (matchedPerson === null) {
     // No match was found for this person in the database, create an entry for them.
     const newPerson = await createPersonWithMatch(
-      res.locals.platform,
+      targetPlatform,
       body.platformId,
       res.locals.platform,
       body.person

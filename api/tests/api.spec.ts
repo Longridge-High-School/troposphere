@@ -22,9 +22,16 @@ describe('API', () => {
 
     expect(response.status).toBe(200)
     expect(response.body.platform).toBe('test')
+
+    const failResponse = await request(app).get('/me').set('Auth', 'bad-key')
+
+    expect(failResponse.status).toBe(403)
+    expect(failResponse.body.result).toBe('error')
   })
 
   describe('Person API', () => {
+    let internalUserId = ''
+
     test('It should sync a person', async () => {
       const platformId = faker.string.uuid()
       const testPerson = {
@@ -35,6 +42,7 @@ describe('API', () => {
         type: 'staff'
       }
 
+      // Confirm that a completely new user is created.
       const initialResponse = await request(app)
         .post('/person/sync')
         .set('Auth', apiKey)
@@ -42,6 +50,56 @@ describe('API', () => {
         .send({platformId, person: testPerson})
 
       expect(initialResponse.status).toBe(201)
+      expect(initialResponse.body.result).toBe('created')
+
+      internalUserId = initialResponse.body.person.id
+
+      // Confirm that resending the original user results in no-chaange
+      const unchangedResponse = await request(app)
+        .post('/person/sync')
+        .set('Auth', apiKey)
+        .set('Content-Type', 'application/json')
+        .send({platformId, person: testPerson})
+
+      expect(unchangedResponse.status).toBe(200)
+      expect(unchangedResponse.body.result).toBe('no-change')
+
+      // Confirm that changing a detail results in updated
+      const changedResponse = await request(app)
+        .post('/person/sync')
+        .set('Auth', apiKey)
+        .set('Content-Type', 'application/json')
+        .send({
+          platformId,
+          person: {accountName: faker.internet.username(), ...testPerson}
+        })
+
+      expect(changedResponse.status).toBe(201)
+      expect(changedResponse.body.result).toBe('updated')
+
+      const anotherApiKey = await createAPIKey('imposter')
+      const cantUpdateResponse = await request(app)
+        .post('/person/sync')
+        .set('Auth', anotherApiKey)
+        .set('Content-Type', 'application/json')
+        .send({platform: 'test', platformId, person: testPerson})
+
+      expect(cantUpdateResponse.status).toBe(403)
+      expect(cantUpdateResponse.body.result).toBe('error')
+    })
+
+    test('It should find users', async () => {
+      const findResponse = await request(app)
+        .get(`/person/${internalUserId}`)
+        .set('Auth', apiKey)
+
+      expect(findResponse.status).toBe(200)
+
+      const notFoundResponse = await request(app)
+        .get(`/person/not-found`)
+        .set('Auth', apiKey)
+
+      expect(notFoundResponse.status).toBe(404)
     })
   })
 })
