@@ -6,6 +6,7 @@ import {
   getPersonFromMatch,
   type PersonCreateData
 } from '../lib/person'
+import {log} from '../lib/log'
 
 export const router = express.Router()
 
@@ -55,12 +56,24 @@ router.post('/sync', async (req, res) => {
       body.person
     )
 
+    await log(
+      `New person created (${newPerson.firstName} ${newPerson.lastName})`,
+      'person',
+      newPerson.id
+    )
+
     res.status(201)
     res.json({result: 'created', person: newPerson})
     return
   }
 
   if (matchedPerson.source !== res.locals.platform) {
+    await log(
+      `Source ${res.locals.platform} tried to sync person belonging to source ${matchedPerson.source}`,
+      'person',
+      matchedPerson.id
+    )
+
     res.status(403)
     res.json({
       result: 'error',
@@ -87,6 +100,8 @@ router.post('/sync', async (req, res) => {
       where: {id: matchedPerson.id},
       data: {...body.person}
     })
+
+    await log(`Updated person`, 'person', updatedPerson.id)
 
     res.status(201)
     res.json({result: 'updated', person: updatedPerson})
@@ -131,6 +146,11 @@ router.post('/sync/:source', async (req, res) => {
   const deletedCount = await prisma.person.deleteMany({
     where: {id: {notIn: req.body.people}, source: req.params.source}
   })
+
+  await log(
+    `Deleted ${deletedCount.count} people from the ${req.params.source} source`,
+    'source'
+  )
 
   res.status(200)
   res.json({result: 'success', deleted: deletedCount.count})

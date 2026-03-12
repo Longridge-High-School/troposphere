@@ -70,9 +70,19 @@ model GroupMembership {
 model APIKey {
   id String @id @default(uuid())
 
-  key String @unique
+  key      String @unique
   platform String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model LogEntry {
+  id String @id @default(uuid())
+
+  message   String
+  subject   String
+  subjectId String?
+
+  createdAt DateTime @default(now())
 }
