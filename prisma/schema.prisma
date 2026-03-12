@@ -48,6 +48,11 @@ model Group {
   name String
 
   source String
+  sourceId String?
+
+  parent     String?
+  filterType String?
+  filterData String?
 
   memberships GroupMembership[]
 

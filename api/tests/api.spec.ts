@@ -133,4 +133,10 @@ describe('API', () => {
       expect(realClearUsersResponse.body.deleted).toBe(1)
     })
   })
+
+  describe('Group API', () => {
+    let internalGroupId = ''
+
+    test('It should sync a group')
+  })
 })
