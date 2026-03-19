@@ -30,7 +30,7 @@ export const setGroupMembers = async (
 
   await Promise.all(
     members.map(({platform, platformId}) => {
-      return async () => {
+      const promise = async () => {
         const person = await getPersonFromMatch(platform, platformId)
 
         if (person === null) {
@@ -50,12 +50,14 @@ export const setGroupMembers = async (
 
         await log(`Added to group ${group.name}`, 'person', person.id)
       }
+
+      return promise()
     })
   )
 
   await Promise.all(
     groupMemberIds.map(personId => {
-      return async () => {
+      const promise = async () => {
         if (
           ![
             ...results.added.map(({internalId}) => internalId),
@@ -66,6 +68,7 @@ export const setGroupMembers = async (
           await prisma.groupMembership.deleteMany({
             where: {groupId: group.id, personId}
           })
+          await log(`Removed from group ${group.name}`, 'person', personId)
           results.removed.push({
             platform: 'internal',
             platformId: personId,
@@ -73,6 +76,8 @@ export const setGroupMembers = async (
           })
         }
       }
+
+      return promise()
     })
   )
 

@@ -158,7 +158,26 @@ describe('API', () => {
         .set('Content-Type', 'application/json')
         .send({platformId, group: {name: 'Staff'}, members: staffAsMembers})
 
-      console.dir(initialResponse.body)
+      expect(initialResponse.status).toBe(201)
+      expect(initialResponse.body.result).toBe('created')
+      expect(initialResponse.body.groupMembershipChanges.added).toHaveLength(
+        staffAsMembers.length
+      )
+
+      const lastStaffMember = staffAsMembers.pop()
+
+      const updateResponse = await request(app)
+        .post('/group/sync')
+        .set('Auth', apiKey)
+        .set('Content-Type', 'application/json')
+        .send({platformId, group: {name: 'Staff'}, members: staffAsMembers})
+
+      expect(updateResponse.status).toBe(201)
+      expect(updateResponse.body.result).toBe('updated')
+      expect(updateResponse.body.groupMembershipChanges.noChange).toHaveLength(
+        staffAsMembers.length
+      )
+      expect(updateResponse.body.groupMembershipChanges.removed).toHaveLength(1)
     })
   })
 })

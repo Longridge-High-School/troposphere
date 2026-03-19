@@ -49,10 +49,40 @@ router.post('/sync', async (req, res) => {
 
     await log(`New group created (${newGroup.name})`, 'group', newGroup.id)
 
-    await setGroupMembers(newGroup.id, body.members)
+    const groupMembershipChanges = await setGroupMembers(
+      newGroup.id,
+      body.members
+    )
 
     res.status(201)
-    res.json({result: 'created', group: newGroup})
+    res.json({result: 'created', group: newGroup, groupMembershipChanges})
     return
   }
+
+  if (matchedGroup.source !== res.locals.platform) {
+    await log(
+      `Source ${res.locals.platform} tried to sync group belonging to source ${matchedGroup.source}`,
+      'group',
+      matchedGroup.id
+    )
+
+    res.status(403)
+    res.json({
+      result: 'error',
+      message: `This group belongs to the source ${matchedGroup.source}`
+    })
+  }
+
+  const updatedGroup = await prisma.group.update({
+    where: {id: matchedGroup.id},
+    data: {...body.group}
+  })
+  const groupMembershipChanges = await setGroupMembers(
+    matchedGroup.id,
+    body.members
+  )
+
+  await log(`Updated Group ${matchedGroup.name}`, 'group', matchedGroup.id)
+  res.status(201)
+  res.json({result: 'updated', group: updatedGroup, groupMembershipChanges})
 })
