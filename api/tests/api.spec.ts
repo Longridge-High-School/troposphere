@@ -2,9 +2,10 @@ import {describe, test, expect, beforeAll, afterAll} from 'vitest'
 import request from 'supertest'
 import {faker} from '@faker-js/faker'
 
-import {clearDatabase, createAPIKey} from './helpers'
+import {clearDatabase, createAPIKey, createSampleData} from './helpers'
 
 import {app} from '../src/api'
+import {getPrisma} from '../src/lib/prisma'
 
 describe('API', () => {
   let apiKey = ''
@@ -137,6 +138,27 @@ describe('API', () => {
   describe('Group API', () => {
     let internalGroupId = ''
 
-    test('It should sync a group')
+    beforeAll(async () => {
+      await createSampleData()
+    })
+
+    test('It should sync a group', async () => {
+      const prisma = getPrisma()
+
+      const platformId = faker.string.uuid()
+
+      const staffPeople = await prisma.person.findMany({where: {type: 'staff'}})
+      const staffAsMembers = staffPeople.map(({id}) => {
+        return {platform: 'internal', platformId: id}
+      })
+
+      const initialResponse = await request(app)
+        .post('/group/sync')
+        .set('Auth', apiKey)
+        .set('Content-Type', 'application/json')
+        .send({platformId, group: {name: 'Staff'}, members: staffAsMembers})
+
+      console.dir(initialResponse.body)
+    })
   })
 })

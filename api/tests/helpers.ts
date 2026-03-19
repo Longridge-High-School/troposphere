@@ -20,3 +20,27 @@ export const createAPIKey = async (platform: string = 'test') => {
 
   return apiKey.key
 }
+
+export const createSampleData = async () => {
+  const prisma = getPrisma()
+
+  const domain = 'test.com'
+
+  for (let i = 0; i < 100; i++) {
+    const accountName = faker.internet.username()
+
+    await prisma.person.create({
+      data: {
+        firstName: faker.person.firstName(),
+        lastName: faker.person.lastName(),
+        title: faker.person.prefix(),
+        accountName,
+        email: `${accountName}@${domain}`,
+        type: 'staff',
+        cohort: '',
+        staffCode: faker.person.firstName().substring(0, 2),
+        source: 'test'
+      }
+    })
+  }
+}
